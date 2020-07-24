@@ -1,0 +1,39 @@
+  pipeline {
+    agent {
+      node {
+        label "master"
+      } 
+    }
+    environment {
+        AWS_ACCESS_KEY_ID     = 'xxxxxxxxxxxxxxx'
+        AWS_SECRET_ACCESS_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    }
+    stages {
+      stage('descargar_codigo_reciente') {
+        steps {
+          git 'https://github.com/pacosepulveda/terraform-sample.git'
+        }
+      }
+
+      stage('TF Init&Plan') {
+        steps {
+          sh 'terraform init'
+          sh 'terraform plan'
+        }      
+      }
+
+      stage('Aprovacion') {
+        steps {
+          script {
+            def userInput = input(id: 'confirm', message: '¿Aplicar Terraform?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: true, description: 'Apply terraform', name: 'confirm'] ])
+          }
+        }
+      }
+
+      stage('TF Apply') {
+        steps {
+          sh 'terraform apply -auto-approve'
+        }
+      }
+    } 
+  }
